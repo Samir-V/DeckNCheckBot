@@ -24,6 +24,25 @@ bot = Bot(token=TOKEN)
 
 dp = Dispatcher()
 
+@dp.errors()
+async def error_handler(update, exception):
+    """Глобальный обработчик ошибок — сбрасывает состояние и сообщает пользователю"""
+    try:
+        if update and update.message:
+            user_id = update.message.from_user.id
+            user_class.pop(user_id, None)
+            user_mode.pop(user_id, None)
+            user_topic.pop(user_id, None)
+            user_subtopic.pop(user_id, None)
+            current_task.pop(user_id, None)
+            await update.message.answer(
+                f"⚠️ Произошла ошибка: {type(exception).__name__}: {exception}\n\n"
+                "Состояние сброшено. Нажми /start чтобы начать заново."
+            )
+    except Exception:
+        pass
+    return True
+
 
 async def handle_webhook(request):
 
@@ -1462,7 +1481,12 @@ async def send_task(message, user_id):
 @dp.message(lambda message: message.text == "/start")
 
 async def start(message: types.Message):
-
+    user_id = message.from_user.id
+    user_class.pop(user_id, None)
+    user_mode.pop(user_id, None)
+    user_topic.pop(user_id, None)
+    user_subtopic.pop(user_id, None)
+    current_task.pop(user_id, None)
     await message.answer("Привет! 👋 Выбери класс:", reply_markup=class_kb)
 
 
