@@ -43,16 +43,14 @@ async def error_handler(update, exception):
         pass
     return True
 
-
 async def handle_webhook(request):
-
     data = await request.json()
-
     update = types.Update(**data)
-
-    await dp.feed_update(bot, update)
-
-    return web.Response()
+    try:
+        await dp.feed_update(bot, update)
+    except Exception as e:
+        print(f"[ERROR] Update processing failed: {e}")
+    return web.Response()  
 
 
 async def healthcheck(request):
@@ -1520,51 +1518,33 @@ async def choose_mode(message: types.Message):
 # 3. НАЗАД
 
 @dp.message(lambda m: m.text == "⬅️ Назад")
-
 async def back(message: types.Message):
-
     user_id = message.from_user.id
-
  
-
     if user_id in current_task:
-
+        # Уровень 5 (задание) → Уровень 4 (выбор подраздела)
         del current_task[user_id]
-
         del user_subtopic[user_id]
-
         await message.answer("Выбери подраздел:", reply_markup=get_subtopics_kb(user_topic[user_id]))
-
  
-
     elif user_id in user_subtopic:
-
+        # Уровень 4 (подраздел выбран) → Уровень 3 (выбор темы)
         del user_subtopic[user_id]
-
         await message.answer("Выбери тему:", reply_markup=get_topics_kb(user_class[user_id]))
-
  
-
     elif user_id in user_topic:
-
+        # Уровень 4 (подраздел не выбран, после завершения заданий) → Уровень 3 (выбор темы)
         del user_topic[user_id]
-
-        await message.answer("Выбери режим:", reply_markup=mode_kb)
-
+        await message.answer("Выбери тему:", reply_markup=get_topics_kb(user_class[user_id]))
  
-
     elif user_id in user_mode:
-
+        # Уровень 3 (тема не выбрана) → Уровень 2 (выбор режима)
         del user_mode[user_id]
-
-        await message.answer("Выбери класс:", reply_markup=class_kb)
-
+        await message.answer("Выбери режим:", reply_markup=mode_kb)
  
-
     elif user_id in user_class:
-
+        # Уровень 2 (режим не выбран) → Уровень 1 (выбор класса)
         del user_class[user_id]
-
         await message.answer("Привет! 👋 Выбери класс:", reply_markup=class_kb)
 
 
