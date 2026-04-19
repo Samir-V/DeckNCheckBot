@@ -1604,6 +1604,7 @@ async def next_task(message: types.Message):
         # Задания в подразделе закончились → возврат к выбору подраздела
 
         del current_task[user_id]
+        del user_subtopic[user_id]
 
         await message.answer(
 
