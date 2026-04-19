@@ -1498,32 +1498,34 @@ async def choose_mode(message: types.Message):
 @dp.message(lambda m: m.text == "⬅️ Назад")
 async def back(message: types.Message):
     user_id = message.from_user.id
- 
+    
+    # ПРОВЕРКА: Если данных о пользователе вообще нет (сервер перезагрузился)
+    if user_id not in user_class:
+        await message.answer("Сессия истекла. Начни со старта!", reply_markup=class_kb)
+        return
+
     if user_id in current_task:
-        # Уровень 5 (задание) → Уровень 4 (выбор подраздела)
         del current_task[user_id]
-        del user_subtopic[user_id]
+        user_subtopic.pop(user_id, None) # Используем pop вместо del для безопасности
         await message.answer("Выбери подраздел:", reply_markup=get_subtopics_kb(user_topic[user_id]))
- 
+
     elif user_id in user_subtopic:
-        # Уровень 4 (подраздел выбран) → Уровень 3 (выбор темы)
         del user_subtopic[user_id]
         await message.answer("Выбери тему:", reply_markup=get_topics_kb(user_class[user_id]))
- 
+
     elif user_id in user_topic:
-        # Уровень 4 (подраздел не выбран, после завершения заданий) → Уровень 3 (выбор темы)
         del user_topic[user_id]
-        await message.answer("Выбери тему:", reply_markup=get_topics_kb(user_class[user_id]))
- 
+        # Безопасно получаем класс
+        cls = user_class.get(user_id, "5-6") 
+        await message.answer("Выбери тему:", reply_markup=get_topics_kb(cls))
+
     elif user_id in user_mode:
-        # Уровень 3 (тема не выбрана) → Уровень 2 (выбор режима)
         del user_mode[user_id]
         await message.answer("Выбери режим:", reply_markup=mode_kb)
- 
-    elif user_id in user_class:
-        # Уровень 2 (режим не выбран) → Уровень 1 (выбор класса)
-        del user_class[user_id]
-        await message.answer("Привет! 👋 Выбери класс:", reply_markup=class_kb)
+
+    else:
+        # Если мы совсем запутались, возвращаем в начало
+        await message.answer("Выбери класс:", reply_markup=class_kb)
 
 
 # 4. СЛЕДУЮЩЕЕ ЗАДАНИЕ
