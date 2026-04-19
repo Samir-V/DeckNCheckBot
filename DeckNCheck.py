@@ -1467,50 +1467,29 @@ async def start(message: types.Message):
 
 
 # 1. ВЫБОР КЛАССА
-
 @dp.message(lambda m: m.text in ["5-6 класс", "7-9 класс"])
-
 async def choose_class(message: types.Message):
-
     user_id = message.from_user.id
-
-   
-
+    # Сбрасываем всё старое состояние при смене класса
+    user_mode.pop(user_id, None)
+    user_topic.pop(user_id, None)
+    user_subtopic.pop(user_id, None)
+    current_task.pop(user_id, None)
     user_class[user_id] = message.text.replace(" класс", "")
-
-   
-
     await message.answer("Выбери режим:", reply_markup=mode_kb)
-
-
-
+ 
 # 2. ВЫБОР РЕЖИМА
-
 @dp.message(lambda m: m.text in ["📘 Теория", "📝 Практика"])
-
 async def choose_mode(message: types.Message):
-
     user_id = message.from_user.id
-
-   
-
     if user_id not in user_class:
-
         return
-
-   
-
+    # Сбрасываем тему и подраздел при смене режима
+    user_topic.pop(user_id, None)
+    user_subtopic.pop(user_id, None)
+    current_task.pop(user_id, None)
     user_mode[user_id] = "theory" if "Теория" in message.text else "practice"
-
-   
-
-    await message.answer(
-
-        "Выбери тему:",
-
-        reply_markup=get_topics_kb(user_class[user_id])
-
-    )
+    await message.answer("Выбери тему:", reply_markup=get_topics_kb(user_class[user_id]))
 
 
 
